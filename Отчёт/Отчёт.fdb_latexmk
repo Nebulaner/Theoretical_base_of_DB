@@ -1,5 +1,5 @@
 # Fdb version 4
-["pdflatex"] 1775543052.90431 "f:/Политех/4 сем/БД/Отчёт/Отчёт.tex" "Отчёт.pdf" "Отчёт" 1775543056.67791 0
+["pdflatex"] 1775543083.36829 "f:/Политех/4 сем/БД/Отчёт/Отчёт.tex" "Отчёт.pdf" "Отчёт" 1775543086.1397 0
   "C:/Users/Константин" 1748207773 19172 27523a2ba3cb0b8d17ae06ae80dac3f7 ""
   "C:/Users/Константин Гумницкий/AppData/Local/MiKTeX/fonts/map/pdftex/pdftex.map" 1775486384 82507 a9eef8696c92627b87e9975edea03b2a ""
   "C:/Users/Константин Гумницкий/AppData/Local/MiKTeX/fonts/pk/ljfour/jknappen/ec/dpi600/tcrm1440.pk" 1775486400 16968 c4337584e350c942df942510103c9b6c ""
@@ -119,11 +119,11 @@
   "C:/Users/Константин Гумницкий/AppData/Local/Programs/MiKTeX/tex/latex/xurl/xurl.sty" 1641733940 4675 e4b8c405820368c2dfb03526e16d725a ""
   "ER.png" 1775543019 131677 e7aa52a3a69d97978ac2de5ca91a4e68 ""
   "IE.png" 1775542936 52994 3e8925b18f4ca656de7cb4065ec7861d ""
-  "f:/Политех/4 сем/БД/Отчёт/Отчёт.tex" 1775493783 23293 805e1bf909aff2d04fc3ee4610c8ad57 ""
-  "Отчёт.aux" 1775543056 1547 7a50e5693145d288800500019f3e54b9 "pdflatex"
-  "Отчёт.out" 1775543056 968 38e53ac09e3fa041bd53e3ba4820409d "pdflatex"
-  "Отчёт.tex" 1775493783 23293 805e1bf909aff2d04fc3ee4610c8ad57 ""
-  "Отчёт.toc" 1775543056 520 dbfd768db2e443debad504152a48b350 "pdflatex"
+  "f:/Политех/4 сем/БД/Отчёт/Отчёт.tex" 1775543082 23295 96da4b538a22076c2a61409b4046496a ""
+  "Отчёт.aux" 1775543085 1547 7a50e5693145d288800500019f3e54b9 "pdflatex"
+  "Отчёт.out" 1775543085 968 38e53ac09e3fa041bd53e3ba4820409d "pdflatex"
+  "Отчёт.tex" 1775543082 23295 96da4b538a22076c2a61409b4046496a ""
+  "Отчёт.toc" 1775543085 520 dbfd768db2e443debad504152a48b350 "pdflatex"
   (generated)
   "Отчёт.aux"
   "Отчёт.log"
