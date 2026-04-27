@@ -1,218 +1,373 @@
 import random
-from datetime import datetime, timedelta
-from typing import List, Dict, Any
+import csv
+import os
+from typing import Dict, List, Any
 
-OBJECT_NAMES = ["Andromeda", "Milky Way", "Orion Nebula", "Pleiades", "Betelgeuse", "Sirius", "Vega", "Crab Nebula", "Black Eye Galaxy", "Sombrero Galaxy"]
-OBJECT_TYPES = ["Galaxy", "Nebula", "Star", "Globular Cluster", "Supernova Remnant"]
-DECLINATION_RANGE = (-90.0, 90.0)
-SIZE_RANGE = (0.01, 120.0)
-MAGNITUDE_RANGE = (-30.0, 20.0)
+COUNTRIES = ["USA", "UK", "France", "Germany", "Japan", "Russia", "China", "Italy", "Canada", "Australia", 
+             "Spain", "Netherlands", "Switzerland", "Sweden", "India", "Brazil", "Mexico", "South Africa", 
+             "South Korea", "Israel", "Poland", "Ukraine", "Norway", "Finland", "Denmark", "Austria", "Belgium",
+             "South Africa", "Arizona", "Puerto Rico", "China", "India", "Namibia", "Argentina"]
 
-EDU_NAMES = ["Harvard University", "MIT", "Cambridge University", "Oxford University", "Sorbonne", "Heidelberg University", "Tokyo University", "Moscow State University", "Beijing University", "Stanford University"]
-EDU_TYPES = ["University", "College", "Institute", "Academy"]
-COUNTRIES = ["USA", "UK", "France", "Germany", "Japan", "Russia", "China", "Italy", "Canada", "Australia", "Spain", "Netherlands", "Switzerland", "Sweden", "India"]
-BUDGET_RANGE = (1e6, 1e11)
+OBJECT_TYPES = ["Galaxy", "Nebula", "Star", "Globular Cluster", "Open Cluster", "Supernova Remnant", 
+                "Planetary Nebula", "Quasar", "Pulsar", "Black Hole", "Brown Dwarf", "Red Giant", "White Dwarf"]
 
-SCIENTIST_NAMES = ["John Smith", "Jane Doe", "Ivan Petrov", "Maria Garcia", "Hans Mueller", "Yuki Tanaka", "Pierre Dubois", "Anna Kowalski", "Carlos Fernandez", "Olga Smirnova"]
-PROFESSIONS = ["Astrophysics", "Cosmology", "Planetary Science", "Stellar Astronomy", "Radio Astronomy"]
-GRADUATES = ["PhD", "Master", "Bachelor", "Professor", "Doctor of Science"]
+EDU_TYPES = ["University", "College", "Institute", "Academy", "School", "Research Center", "Polytechnic"]
+RESEARCH_TYPES = ["State", "Private", "Mixed", "International", "Non-profit", "Commercial", "Foundation"]
+TELESCOPE_TYPES = ["Optical", "Radio", "Infrared", "X-ray", "Gamma-ray", "UV", "Solar", "Neutrino", "Gravitational"]
+TELESCOPE_SPOTS = ["Space", "Hawaii", "Chile", "Canary Islands", "Australia", "South Africa", 
+                   "Arizona", "Puerto Rico", "China", "India", "Namibia", "Argentina", "Tenerife", "Antarctica"]
 
-RESEARCH_TYPES = ["State", "Private", "Mixed", "International"]
-RESEARCH_BUDGET_RANGE = (5e5, 5e10)
+PROFESSIONS = ["Astrophysics", "Cosmology", "Planetary Science", "Stellar Astronomy", "Radio Astronomy",
+               "Solar Physics", "Galactic Astronomy", "Extragalactic Astronomy", "Astrometry", 
+               "Exoplanetology", "Heliophysics", "Astrochemistry"]
+GRADUATES = ["PhD", "Master", "Bachelor", "Professor", "Doctor of Science", "Candidate of Science", 
+             "Senior Researcher", "Leading Researcher", "Associate Professor", "Postdoc"]
 
-TELESCOPE_NAMES = ["Hubble", "Webb", "Keck", "VLT", "ALMA", "Chandra", "Fermi", "Arecibo", "FAST", "Gemini"]
-TELESCOPE_TYPES = ["Optical", "Radio", "Infrared", "X-ray", "Gamma-ray"]
-TELESCOPE_SPOTS = ["Space", "Hawaii", "Chile", "Canary Islands", "Australia", "South Africa", "Arizona", "Puerto Rico", "China", "India"]
-YEAR_START = 1950
-YEAR_END = 2025
+ORGANISATION_PREFIXES = ["International", "National", "European", "Asian", "African", "American"]
+ORGANISATION_SUFFIXES = ["Space Research Institute", "Astronomical Observatory", "Space Center", 
+                         "Astrophysics Lab", "Planetary Society", "Cosmic Research Center", 
+                         "Radio Astronomy Station", "Cosmic Ray Laboratory"]
 
-AMATEUR_NAMES = ["Bob Williams", "Alice Brown", "Charlie Davis", "Diana Prince", "Ethan Hunt", "Fiona Gallagher", "George Costanza", "Helen Keller"]
-AMATEUR_AGE_RANGE = (16, 85)
+OBJECT_NAMES = ["Andromeda Galaxy", "Milky Way", "Orion Nebula", "Pleiades", "Betelgeuse", "Sirius", "Vega", 
+                "Crab Nebula", "Black Eye Galaxy", "Sombrero Galaxy", "Whirlpool Galaxy", "Pinwheel Galaxy",
+                "Triangulum Galaxy", "Cat's Eye Nebula", "Ring Nebula", "Eagle Nebula", "Horsehead Nebula",
+                "Tarantula Nebula", "Rose Galaxy", "Sunflower Galaxy", "Tadpole Galaxy", "Cigar Galaxy"]
 
-CATALOG_NAMES = ["NGC", "IC", "Messier", "Caldwell", "PGC", "UGC", "SDSS", "2MASS", "HIP", "Tycho"]
-CATALOG_SIZE_RANGE = (10, 50000)
-CATALOG_YEAR_RANGE = (1600, 2025)
+CATALOG_NAMES = ["NGC", "IC", "Messier", "Caldwell", "PGC", "UGC", "SDSS", "2MASS", "HIP", "Tycho", 
+                 "Gaia DR3", "WISE", "Hipparcos", "GSC", "USNO", "NOMAD", "DENIS", "IRAS"]
 
-def random_date(start_year: int, end_year: int) -> str:
-    """Генерирует случайную дату в формате YYYY-MM-DD"""
-    start_date = datetime(start_year, 1, 1)
-    end_date = datetime(end_year, 12, 31)
-    delta = end_date - start_date
-    random_days = random.randint(0, delta.days)
-    random_date = start_date + timedelta(days=random_days)
-    return random_date.strftime("%Y-%m-%d")
+SCIENTIST_FIRST = ["John", "Jane", "Ivan", "Maria", "Hans", "Yuki", "Pierre", "Anna", "Carlos", "Olga",
+                   "David", "Sarah", "Michael", "Elena", "Thomas", "Natalia", "Robert", "Patricia", 
+                   "James", "Linda", "William", "Barbara", "Richard", "Jennifer", "Joseph", "Maria"]
+SCIENTIST_LAST = ["Smith", "Doe", "Petrov", "Garcia", "Mueller", "Tanaka", "Dubois", "Kowalski", "Fernandez", 
+                  "Smirnova", "Johnson", "Williams", "Brown", "Jones", "Miller", "Davis", "Wilson", "Martinez",
+                  "Anderson", "Taylor", "Thomas", "Jackson", "White", "Harris", "Martin", "Thompson"]
+
+AMATEUR_FIRST = ["Bob", "Alice", "Charlie", "Diana", "Ethan", "Fiona", "George", "Helen", "Ian", "Julia",
+                 "Kevin", "Laura", "Mike", "Nina", "Oscar", "Paula", "Quentin", "Rachel", "Steve", "Tina",
+                 "Ursula", "Victor", "Wendy", "Xavier", "Yvonne", "Zachary"]
+AMATEUR_LAST = ["Williams", "Brown", "Davis", "Prince", "Hunt", "Gallagher", "Costanza", "Keller", "Anderson",
+                "Thomas", "Jackson", "White", "Harris", "Martin", "Thompson", "Moore", "Clark", "Rodriguez",
+                "Lewis", "Lee", "Walker", "Hall", "Allen", "Young", "King", "Wright"]
 
 def random_float(min_val: float, max_val: float, precision: int = 2) -> float:
     return round(random.uniform(min_val, max_val), precision)
 
-def escape_sql_string(s: str) -> str:
-    """Экранирует одинарные кавычки для SQL"""
-    return s.replace("'", "''")
+def random_int(min_val: int, max_val: int) -> int:
+    return random.randint(min_val, max_val)
 
-def generate_objects(n: int = 20) -> List[Dict[str, Any]]:
-    data = []
-    for _ in range(n):
-        obj = {
-            "ObjectName": random.choice(OBJECT_NAMES) + f"_{random.randint(1, 100)}",
-            "Type": random.choice(OBJECT_TYPES),
-            "Declension": random_float(DECLINATION_RANGE[0], DECLINATION_RANGE[1], 3),
-            "Size": random_float(SIZE_RANGE[0], SIZE_RANGE[1], 2),
-            "Magnitude": random_float(MAGNITUDE_RANGE[0], MAGNITUDE_RANGE[1], 2)
-        }
-        data.append(obj)
-    return data
+def random_date_year(min_year: int, max_year: int) -> int:
+    return random.randint(min_year, max_year)
 
-def generate_educational_institutions(n: int = 15) -> List[Dict[str, Any]]:
-    data = []
-    for _ in range(n):
-        inst = {
-            "Organisation": random.choice(EDU_NAMES) + f" {random.randint(1, 20)}",
-            "Type": random.choice(EDU_TYPES),
-            "Country": random.choice(COUNTRIES),
-            "Budget": random_float(BUDGET_RANGE[0], BUDGET_RANGE[1], 0)
-        }
-        data.append(inst)
-    return data
+def random_name(first_names: List[str], last_names: List[str]) -> str:
+    """Генерирует случайное имя"""
+    return f"{random.choice(first_names)} {random.choice(last_names)}"
 
-def generate_scientists(n: int = 25) -> List[Dict[str, Any]]:
-    data = []
-    for _ in range(n):
-        scientist = {
-            "Person": random.choice(SCIENTIST_NAMES) + f" {random.randint(1, 99)}",
-            "Organisation": random.choice(EDU_NAMES) + f" {random.randint(1, 5)}",
-            "Country": random.choice(COUNTRIES),
-            "Proffesion": random.choice(PROFESSIONS),
-            "Graduate": random.choice(GRADUATES)
-        }
-        data.append(scientist)
-    return data
+class DataGenerator:
+    def __init__(self):
+        self.data = {}
+        
+    def generate_catalogs(self, count: int) -> List[Dict[str, Any]]:
+        """Каталог - независимая таблица"""
+        print(f"  Генерация каталогов ({count} записей)...")
+        catalogs = []
+        for i in range(count):
+            catalog = {
+                "ID_Catalog": i + 1,
+                "Count": random_int(10, 50000),
+                "CatalogName": f"{random.choice(CATALOG_NAMES)}-{random_int(1, 999)}"
+            }
+            catalogs.append(catalog)
+        self.data['catalogs'] = catalogs
+        return catalogs
+    
+    def generate_educational_institutions(self, count: int) -> List[Dict[str, Any]]:
+        """Образовательное учреждение - независимая таблица"""
+        print(f"  Генерация образовательных учреждений ({count} записей)...")
+        institutions = []
+        for i in range(count):
+            inst = {
+                "ID_Organisation": i + 1,
+                "Type": random.choice(EDU_TYPES),
+                "Country": random.choice(COUNTRIES),
+                "Budget": random_float(1e6, 1e11, 0),
+                "Organisation": f"{random.choice(EDU_TYPES)} of {random.choice(COUNTRIES)} {random_int(1, 50)}"
+            }
+            institutions.append(inst)
+        self.data['edu_institutions'] = institutions
+        return institutions
+    
+    def generate_research_organisations(self, count: int) -> List[Dict[str, Any]]:
+        """Исследовательская организация - независимая таблица"""
+        print(f"  Генерация исследовательских организаций ({count} записей)...")
+        organisations = []
+        for i in range(count):
+            org = {
+                "ID_Organisation": f"RO_{i+1:04d}",
+                "Type": random.choice(RESEARCH_TYPES),
+                "Country": random.choice(COUNTRIES),
+                "Budget": random_float(5e5, 5e10, 0),
+                "Organisation": f"{random.choice(ORGANISATION_PREFIXES)} {random.choice(ORGANISATION_SUFFIXES)} {random_int(1, 99)}"
+            }
+            organisations.append(org)
+        self.data['research_orgs'] = organisations
+        return organisations
+    
+    def generate_scientists(self, count: int) -> List[Dict[str, Any]]:
+        """Учёный - зависит от организаций и каталогов"""
+        print(f"  Генерация ученых ({count} записей)...")
+        scientists = []
+        
+        # Получаем списки ID организаций и каталогов
+        all_orgs = self.data.get('edu_institutions', []) + self.data.get('research_orgs', [])
+        org_ids = [org["ID_Organisation"] for org in all_orgs]
+        catalog_ids = [cat["ID_Catalog"] for cat in self.data.get('catalogs', [])]
+        
+        for i in range(count):
+            scientist = {
+                "Person": random_name(SCIENTIST_FIRST, SCIENTIST_LAST),
+                "Country": random.choice(COUNTRIES),
+                "Proffesion": random.choice(PROFESSIONS),
+                "Graduate": random.choice(GRADUATES),
+                "ID_Organisation": random.choice(org_ids) if org_ids else None,
+                "ID_Catalog": random.choice(catalog_ids) if catalog_ids else None
+            }
+            scientists.append(scientist)
+        self.data['scientists'] = scientists
+        return scientists
+    
+    def generate_amateurs(self, count: int) -> List[Dict[str, Any]]:
+        """Астроном-любитель - зависит от организаций и каталогов"""
+        print(f"  Генерация астрономов-любителей ({count} записей)...")
+        amateurs = []
+        
+        # Получаем числовые ID организаций (только из образовательных учреждений)
+        edu_org_ids = [org["ID_Organisation"] for org in self.data.get('edu_institutions', [])]
+        catalog_ids = [cat["ID_Catalog"] for cat in self.data.get('catalogs', [])]
+        
+        for i in range(count):
+            amateur = {
+                "Person": random_name(AMATEUR_FIRST, AMATEUR_LAST),
+                "Country": random.choice(COUNTRIES),
+                "Age": str(random_int(16, 85)),
+                "ID_Organisation": random.choice(edu_org_ids) if edu_org_ids else None,
+                "ID_Catalog": random.choice(catalog_ids) if catalog_ids else None
+            }
+            amateurs.append(amateur)
+        self.data['amateurs'] = amateurs
+        return amateurs
+    
+    def generate_telescopes(self, count: int) -> List[Dict[str, Any]]:
+        """Автоматический телескоп - зависит от организаций и каталогов"""
+        print(f"  Генерация телескопов ({count} записей)...")
+        telescopes = []
+        
+        # Получаем список ID организаций
+        all_orgs = self.data.get('edu_institutions', []) + self.data.get('research_orgs', [])
+        org_ids = [org["ID_Organisation"] for org in all_orgs]
+        catalog_ids = [cat["ID_Catalog"] for cat in self.data.get('catalogs', [])]
+        
+        for i in range(count):
+            tel = {
+                "Telescope": f"{random.choice(['Hubble', 'Webb', 'Keck', 'VLT', 'ALMA', 'Chandra', 'Fermi', 'FAST', 'Gemini', 'Subaru', 'GTC', 'LBT'])}-{random_int(1, 99)}",
+                "Type": random.choice(TELESCOPE_TYPES),
+                "ID_Organisation": random.choice(org_ids) if org_ids else None,
+                "Year": random_date_year(1950, 2025),
+                "Spot": random.choice(TELESCOPE_SPOTS),
+                "ID_Catalog": random.choice(catalog_ids) if catalog_ids else None
+            }
+            telescopes.append(tel)
+        self.data['telescopes'] = telescopes
+        return telescopes
+    
+    def generate_objects(self, count: int) -> List[Dict[str, Any]]:
+        """Объект космоса - зависит от каталогов"""
+        print(f"  Генерация объектов космоса ({count:,} записей)...")
+        objects = []
+        
+        catalog_ids = [cat["ID_Catalog"] for cat in self.data.get('catalogs', [])]
+        
+        for i in range(count):
+            obj = {
+                "ID_Catalog": random.choice(catalog_ids) if catalog_ids else None,
+                "Type": random.choice(OBJECT_TYPES),
+                "Declension": random_float(-90, 90, 4),
+                "Size": random_float(0.01, 120, 2),
+                "Magnitude": random_float(-30, 20, 2),
+                "Object": f"{random.choice(OBJECT_NAMES)}_{random_int(1, 10000)}"
+            }
+            objects.append(obj)
+        self.data['objects'] = objects
+        return objects
 
-def generate_research_organisations(n: int = 12) -> List[Dict[str, Any]]:
-    data = []
-    prefixes = ["RI", "Institute", "Center", "Lab", "Foundation"]
-    for _ in range(n):
-        org = {
-            "Organisation": random.choice(prefixes) + " " + random.choice(OBJECT_NAMES) + f" {random.randint(1, 30)}",
-            "Type": random.choice(RESEARCH_TYPES),
-            "Country": random.choice(COUNTRIES),
-            "Budget": random_float(RESEARCH_BUDGET_RANGE[0], RESEARCH_BUDGET_RANGE[1], 0)
-        }
-        data.append(org)
-    return data
-
-def generate_telescopes(n: int = 15) -> List[Dict[str, Any]]:
-    data = []
-    for _ in range(n):
-        tel = {
-            "Telescope": random.choice(TELESCOPE_NAMES) + f"-{random.randint(1, 50)}",
-            "Type": random.choice(TELESCOPE_TYPES),
-            "Owner": random.choice(EDU_NAMES + RESEARCH_TYPES) + f" {random.randint(1, 10)}",
-            "Year": random_date(YEAR_START, YEAR_END),
-            "Spot": random.choice(TELESCOPE_SPOTS)
-        }
-        data.append(tel)
-    return data
-
-def generate_amateurs(n: int = 18) -> List[Dict[str, Any]]:
-    data = []
-    for _ in range(n):
-        amateur = {
-            "Person": random.choice(AMATEUR_NAMES) + f" {random.randint(1, 999)}",
-            "Country": random.choice(COUNTRIES),
-            "Age": random.randint(AMATEUR_AGE_RANGE[0], AMATEUR_AGE_RANGE[1])
-        }
-        data.append(amateur)
-    return data
-
-def generate_catalogs(n: int = 12) -> List[Dict[str, Any]]:
-    data = []
-    for _ in range(n):
-        catalog = {
-            "CatalogName": random.choice(CATALOG_NAMES) + f"-{random.randint(1, 999)}",
-            "Size": random.randint(CATALOG_SIZE_RANGE[0], CATALOG_SIZE_RANGE[1]),
-            "Year": random_date(CATALOG_YEAR_RANGE[0], CATALOG_YEAR_RANGE[1])
-        }
-        data.append(catalog)
-    return data
-
-def generate_insert_sql(table_name: str, columns: List[str], rows: List[Dict[str, Any]]) -> str:
+def generate_sql_insert(table_name: str, columns: List[str], rows: List[Dict[str, Any]], batch_size: int = 1000) -> str:
+    """Генерирует SQL INSERT запросы с поддержкой батчей для больших таблиц"""
     if not rows:
         return f"-- Нет данных для таблицы {table_name}\n"
     
-    col_list = ", ".join(columns)
-    values_lines = []
+    result = []
+    for i in range(0, len(rows), batch_size):
+        batch = rows[i:i+batch_size]
+        values_list = []
+        
+        for row in batch:
+            values = []
+            for col in columns:
+                val = row.get(col, None)
+                if val is None:
+                    values.append("NULL")
+                elif isinstance(val, str):
+                    val_escaped = val.replace("'", "''")
+                    values.append(f"'{val_escaped}'")
+                elif isinstance(val, (int, float)):
+                    values.append(str(val))
+                else:
+                    values.append(f"'{str(val)}'")
+            values_list.append(f"({', '.join(values)})")
+        
+        values_block = ",\n".join(values_list)
+        if i == 0:
+            result.append(f"INSERT INTO {table_name} ({', '.join(columns)}) VALUES\n{values_block};\n")
+        else:
+            result.append(f"\nINSERT INTO {table_name} ({', '.join(columns)}) VALUES\n{values_block};\n")
     
-    for row in rows:
-        values = []
-        for col in columns:
-            val = row.get(col, None)
-            if val is None:
-                values.append("NULL")
-            elif isinstance(val, str):
-                values.append(f"'{escape_sql_string(val)}'")
-            elif isinstance(val, (int, float)):
-                values.append(str(val))
-            else:
-                values.append(f"'{escape_sql_string(str(val))}'")
-        values_lines.append(f"({', '.join(values)})")
+    return "\n".join(result)
+
+def save_to_csv(data_dict: Dict, output_dir: str = "astronomy_data_csv"):
+    """Сохраняет данные в CSV файлы"""
+    os.makedirs(output_dir, exist_ok=True)
     
-    values_block = ",\n".join(values_lines)
-    return f"INSERT INTO {table_name} ({col_list}) VALUES\n{values_block};\n"
+    datasets = [
+        ("catalogs", data_dict.get('catalogs', []), ["ID_Catalog", "Count", "CatalogName"]),
+        ("educational_institutions", data_dict.get('edu_institutions', []), ["ID_Organisation", "Type", "Country", "Budget", "Organisation"]),
+        ("research_organisations", data_dict.get('research_orgs', []), ["ID_Organisation", "Type", "Country", "Budget", "Organisation"]),
+        ("scientists", data_dict.get('scientists', []), ["Person", "Country", "Proffesion", "Graduate", "ID_Organisation", "ID_Catalog"]),
+        ("amateurs", data_dict.get('amateurs', []), ["Person", "Country", "Age", "ID_Organisation", "ID_Catalog"]),
+        ("telescopes", data_dict.get('telescopes', []), ["Telescope", "Type", "ID_Organisation", "Year", "Spot", "ID_Catalog"]),
+        ("objects", data_dict.get('objects', []), ["ID_Catalog", "Type", "Declension", "Size", "Magnitude", "Object"])
+    ]
+    
+    for name, data, columns in datasets:
+        if data:
+            with open(f"{output_dir}/{name}.csv", "w", newline="", encoding="utf-8") as f:
+                writer = csv.DictWriter(f, fieldnames=columns)
+                writer.writeheader()
+                writer.writerows(data)
+            print(f"  • {name}.csv ({len(data):,} записей)")
 
 def main():
-    random.seed(42)  # Для воспроизводимости результатов
+    print("=" * 60)
+    print("ГЕНЕРАТОР ДАННЫХ ДЛЯ АСТРОНОМИЧЕСКОЙ БАЗЫ ДАННЫХ")
+    print("=" * 60)
     
-    # Генерация данных
-    objects = generate_objects(20)
-    edu_institutions = generate_educational_institutions(15)
-    scientists = generate_scientists(25)
-    research_orgs = generate_research_organisations(12)
-    telescopes = generate_telescopes(15)
-    amateurs = generate_amateurs(18)
-    catalogs = generate_catalogs(12)
+    counts = {
+        "catalogs": 500,
+        "edu_institutions": 500,
+        "research_orgs": 200,
+        "scientists": 5000,
+        "amateurs": 10000,
+        "telescopes": 500,
+        "objects": 200000
+    }
     
-    # Формирование SQL-скрипта
-    sql_script = "-- Сгенерированные данные для базы данных\n"
-    sql_script += "-- Таблица: Object\n"
-    sql_script += generate_insert_sql("Object", ["ObjectName", "Type", "Declension", "Size", "Magnitude"], objects)
-    sql_script += "\n"
+    # Создаем генератор
+    generator = DataGenerator()
     
-    sql_script += "-- Таблица: Educational_institution\n"
-    sql_script += generate_insert_sql("Educational_institution", ["Organisation", "Type", "Country", "Budget"], edu_institutions)
-    sql_script += "\n"
+    print("\nГенерация данных (с учетом зависимостей по FK):\n")
     
-    sql_script += "-- Таблица: Scientist\n"
-    sql_script += generate_insert_sql("Scientist", ["Person", "Organisation", "Country", "Proffesion", "Graduate"], scientists)
-    sql_script += "\n"
+    generator.generate_catalogs(counts["catalogs"])
+    generator.generate_educational_institutions(counts["edu_institutions"])
+    generator.generate_research_organisations(counts["research_orgs"])
     
-    sql_script += "-- Таблица: Research_organisation\n"
-    sql_script += generate_insert_sql("Research_organisation", ["Organisation", "Type", "Country", "Budget"], research_orgs)
-    sql_script += "\n"
+    generator.generate_scientists(counts["scientists"])
+    generator.generate_amateurs(counts["amateurs"])
+    generator.generate_telescopes(counts["telescopes"])
+    generator.generate_objects(counts["objects"])
     
-    sql_script += "-- Таблица: Automatic_telescope\n"
-    sql_script += generate_insert_sql("Automatic_telescope", ["Telescope", "Type", "Owner", "Year", "Spot"], telescopes)
-    sql_script += "\n"
+    print("\nГенерация SQL скрипта...")
     
-    sql_script += "-- Таблица: Amateur_astronomer\n"
-    sql_script += generate_insert_sql("Amateur_astronomer", ["Person", "Country", "Age"], amateurs)
-    sql_script += "\n"
+    sql = "-- ===========================================\n"
+    sql += "-- АСТРОНОМИЧЕСКАЯ БАЗА ДАННЫХ\n"
+    sql += "-- Сгенерированные данные\n"
+    sql += "-- ===========================================\n\n"
     
-    sql_script += "-- Таблица: Catalog\n"
-    sql_script += generate_insert_sql("Catalog", ["CatalogName", "Size", "Year"], catalogs)
+    sql += "CREATE SCHEMA IF NOT EXISTS Astronomy;\n\n"
+    sql += "SET search_path TO Astronomy;\n\n"
     
-    # Сохранение в файл
-    with open("generated_data.sql", "w", encoding="utf-8") as f:
-        f.write(sql_script)
+    sql += "-- ===========================================\n"
+    sql += "-- 1. Таблица: Catalog (независимая)\n"
+    sql += "-- ===========================================\n"
+    sql += generate_sql_insert("Catalog", ["ID_Catalog", "Count", "CatalogName"], 
+                               generator.data.get('catalogs', []))
+    sql += "\n"
     
-    print("SQL-скрипт успешно сгенерирован и сохранён в файл 'generated_data.sql'")
-    print(f"Сгенерировано записей:")
-    print(f"  Object: {len(objects)}")
-    print(f"  Educational institution: {len(edu_institutions)}")
-    print(f"  Scientist: {len(scientists)}")
-    print(f"  Research organisation: {len(research_orgs)}")
-    print(f"  Automatic telescope: {len(telescopes)}")
-    print(f"  Amateur astronomer: {len(amateurs)}")
-    print(f"  Catalog: {len(catalogs)}")
+    sql += "-- ===========================================\n"
+    sql += "-- 2. Таблица: Educational_institution (независимая)\n"
+    sql += "-- ===========================================\n"
+    sql += generate_sql_insert("Educational_institution", ["ID_Organisation", "Type", "Country", "Budget", "Organisation"], 
+                               generator.data.get('edu_institutions', []))
+    sql += "\n"
+    
+    sql += "-- ===========================================\n"
+    sql += "-- 3. Таблица: Research_organisation (независимая)\n"
+    sql += "-- ===========================================\n"
+    sql += generate_sql_insert("Research_organisation", ["ID_Organisation", "Type", "Country", "Budget", "Organisation"], 
+                               generator.data.get('research_orgs', []))
+    sql += "\n"
+    
+    sql += "-- ===========================================\n"
+    sql += "-- 4. Таблица: Scientist\n"
+    sql += "-- ===========================================\n"
+    sql += generate_sql_insert("Scientist", ["Person", "Country", "Proffesion", "Graduate", "ID_Organisation", "ID_Catalog"], 
+                               generator.data.get('scientists', []), batch_size=1000)
+    sql += "\n"
+    
+    sql += "-- ===========================================\n"
+    sql += "-- 5. Таблица: Amateur_astronomer\n"
+    sql += "-- ===========================================\n"
+    sql += generate_sql_insert("Amateur_astronomer", ["Person", "Country", "Age", "ID_Organisation", "ID_Catalog"], 
+                               generator.data.get('amateurs', []), batch_size=1000)
+    sql += "\n"
+    
+    sql += "-- ===========================================\n"
+    sql += "-- 6. Таблица: Automatic_telescope\n"
+    sql += "-- ===========================================\n"
+    sql += generate_sql_insert("Automatic_telescope", ["Telescope", "Type", "ID_Organisation", "Year", "Spot", "ID_Catalog"], 
+                               generator.data.get('telescopes', []))
+    sql += "\n"
+    
+    sql += "-- ===========================================\n"
+    sql += "-- 7. Таблица: Object\n"
+    sql += "-- ===========================================\n"
+    sql += generate_sql_insert("Object", ["ID_Catalog", "Type", "Declension", "Size", "Magnitude", "Object"], 
+                               generator.data.get('objects', []), batch_size=5000)
+    
+    with open("astronomy_data.sql", "w", encoding="utf-8") as f:
+        f.write(sql)
+    
+    print("\n💾 Сохранение CSV файлов...")
+    save_to_csv(generator.data)
+    
+    print("\n" + "=" * 60)
+    print("ГЕНЕРАЦИЯ ЗАВЕРШЕНА УСПЕШНО!")
+    print("=" * 60)
+    print("\nСТАТИСТИКА СГЕНЕРИРОВАННЫХ ДАННЫХ:")
+    print("-" * 40)
+    print(f"  • Каталоги:                          {len(generator.data.get('catalogs', [])):,}")
+    print(f"  • Образовательные учреждения:        {len(generator.data.get('edu_institutions', [])):,}")
+    print(f"  • Исследовательские организации:     {len(generator.data.get('research_orgs', [])):,}")
+    print(f"  • Ученые:                            {len(generator.data.get('scientists', [])):,}")
+    print(f"  • Астрономы-любители:                {len(generator.data.get('amateurs', [])):,}")
+    print(f"  • Автоматические телескопы:          {len(generator.data.get('telescopes', [])):,}")
+    print(f"  • Объекты космоса:                   {len(generator.data.get('objects', [])):,}")
+    print("-" * 40)
+    total = sum(len(v) for v in generator.data.values())
+    print(f"  • ВСЕГО ЗАПИСЕЙ:                    {total:,}")
+    print("\nВЫХОДНЫЕ ФАЙЛЫ:")
+    print(f"  • astronomy_data.sql - SQL скрипт с INSERT запросами")
+    print(f"  • astronomy_data_csv/ - CSV файлы для каждой таблицы")
+    print("=" * 60)
 
 if __name__ == "__main__":
+    random.seed(42)
     main()
