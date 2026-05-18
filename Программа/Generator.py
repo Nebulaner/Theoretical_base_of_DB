@@ -2,9 +2,7 @@ import random
 import psycopg2
 from psycopg2 import sql, extras
 from faker import Faker
-from typing import Dict, List, Any, Set, Tuple
-from datetime import datetime, timedelta
-import os
+from typing import List, Set
 import sys
 
 if sys.platform == 'win32':
@@ -23,25 +21,19 @@ fake = Faker(['en_US'])
 Faker.seed(42)
 random.seed(42)
 
-OBJECT_TYPES = ["Galaxy", "Nebula", "Star", "Cluster", "Remnant", "Nebula", 
-                "Quasar", "Pulsar", "BlackHole", "Dwarf", "Giant", "WDwarf"]
-
+OBJECT_TYPES = ["Galaxy", "Nebula", "Star", "Cluster", "Remnant", "Quasar", "Pulsar", "BlackHole", "Dwarf", "Giant", "WDwarf"]
 EDU_TYPES = ["University", "College", "Institute", "Academy", "School", "Research"]
 RESEARCH_TYPES = ["State", "Private", "Mixed", "International", "Non-profit", "Commercial"]
 TELESCOPE_TYPES = ["Optical", "Radio", "Infrared", "X-ray", "Gamma", "UV", "Solar"]
 TELESCOPE_SPOTS = ["Space", "Hawaii", "Chile", "Canary", "Australia", "S.Africa", 
                    "Arizona", "PuertoRico", "China", "India", "Namibia", "Argentina"]
 
-PROFESSIONS = [
-    "Astrophysics", "Cosmology", "PlanetarySci", "StellarAstro", "RadioAstro",
-    "SolarPhysics", "GalacticAstro", "Extragalactic", "Astrometry", 
-    "Exoplanetology", "Heliophysics", "Astrochemistry"
-]
+PROFESSIONS = ["Astrophysics", "Cosmology", "PlanetarySci", "StellarAstro", "RadioAstro",
+               "SolarPhysics", "GalacticAstro", "Extragalactic", "Astrometry", 
+               "Exoplanetology", "Heliophysics", "Astrochemistry"]
 
-GRADUATES = [
-    "PhD", "Master", "Bachelor", "Professor", "Dr.Science", "Cand.Science",
-    "Sr.Researcher", "Lead.Researcher", "Assoc.Prof", "Postdoc"
-]
+GRADUATES = ["PhD", "Master", "Bachelor", "Professor", "Dr.Science", "Cand.Science",
+             "Sr.Researcher", "Lead.Researcher", "Assoc.Prof", "Postdoc"]
 
 ORGANISATION_PREFIXES = ["Intl", "National", "European", "Asian", "African", "American",
                           "Russian", "German", "French", "Japanese", "Chinese", "Indian"]
@@ -62,25 +54,21 @@ COUNTRIES = ["USA", "UK", "France", "Germany", "Japan", "Russia", "China", "Ital
              "Spain", "Netherlands", "Switzerland", "Sweden", "India", "Brazil", "Mexico", "S.Africa", 
              "S.Korea", "Israel", "Poland", "Ukraine", "Norway", "Finland", "Denmark", "Austria", "Belgium"]
 
-FIRST_NAMES = [
-    "James", "Mary", "John", "Patricia", "Robert", "Jennifer", "Michael", "Linda", 
-    "William", "Elizabeth", "David", "Barbara", "Richard", "Susan", "Joseph", "Jessica",
-    "Thomas", "Sarah", "Charles", "Karen", "Christopher", "Nancy", "Daniel", "Lisa",
-    "Matthew", "Betty", "Anthony", "Margaret", "Donald", "Sandra", "Mark", "Ashley",
-    "Paul", "Kimberly", "Steven", "Emily", "Andrew", "Donna", "Kenneth", "Michelle",
-    "George", "Carol", "Joshua", "Amanda", "Kevin", "Dorothy", "Brian", "Melissa",
-    "Edward", "Deborah", "Ronald", "Stephanie", "Timothy", "Rebecca", "Jason", "Sharon",
-    "Jeffrey", "Laura", "Ryan", "Cynthia", "Jacob", "Kathleen", "Gary", "Amy"
-]
+FIRST_NAMES = ["James", "Mary", "John", "Patricia", "Robert", "Jennifer", "Michael", "Linda", 
+               "William", "Elizabeth", "David", "Barbara", "Richard", "Susan", "Joseph", "Jessica",
+               "Thomas", "Sarah", "Charles", "Karen", "Christopher", "Nancy", "Daniel", "Lisa",
+               "Matthew", "Betty", "Anthony", "Margaret", "Donald", "Sandra", "Mark", "Ashley",
+               "Paul", "Kimberly", "Steven", "Emily", "Andrew", "Donna", "Kenneth", "Michelle",
+               "George", "Carol", "Joshua", "Amanda", "Kevin", "Dorothy", "Brian", "Melissa",
+               "Edward", "Deborah", "Ronald", "Stephanie", "Timothy", "Rebecca", "Jason", "Sharon",
+               "Jeffrey", "Laura", "Ryan", "Cynthia", "Jacob", "Kathleen", "Gary", "Amy"]
 
-LAST_NAMES = [
-    "Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller", "Davis",
-    "Rodriguez", "Martinez", "Wilson", "Anderson", "Taylor", "Thomas", "Moore", "Jackson",
-    "Martin", "Lee", "White", "Harris", "Clark", "Lewis", "Robinson", "Walker", "Hall",
-    "Young", "Allen", "King", "Wright", "Scott", "Green", "Baker", "Adams", "Nelson",
-    "Hill", "Ramirez", "Campbell", "Mitchell", "Roberts", "Carter", "Phillips", "Evans",
-    "Turner", "Torres", "Parker", "Collins", "Edwards", "Stewart", "Flores", "Morris"
-]
+LAST_NAMES = ["Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller", "Davis",
+              "Rodriguez", "Martinez", "Wilson", "Anderson", "Taylor", "Thomas", "Moore", "Jackson",
+              "Martin", "Lee", "White", "Harris", "Clark", "Lewis", "Robinson", "Walker", "Hall",
+              "Young", "Allen", "King", "Wright", "Scott", "Green", "Baker", "Adams", "Nelson",
+              "Hill", "Ramirez", "Campbell", "Mitchell", "Roberts", "Carter", "Phillips", "Evans",
+              "Turner", "Torres", "Parker", "Collins", "Edwards", "Stewart", "Flores", "Morris"]
 
 def generate_unique_names(count: int) -> List[str]:
     unique_names = []
@@ -193,9 +181,10 @@ def create_schema(conn):
                 Country VARCHAR(48) NOT NULL,
                 Proffesion VARCHAR(20) NOT NULL,
                 Graduate VARCHAR(20) NOT NULL,
-                ID_Organisation DECIMAL NOT NULL,
+                ID_Organisation_Edu DECIMAL NOT NULL,
+                ID_Organisation_Res VARCHAR(100) NOT NULL,
                 ID_Catalog DECIMAL NOT NULL,
-                PRIMARY KEY (Person, ID_Organisation, ID_Catalog)
+                PRIMARY KEY (Person, ID_Organisation_Edu, ID_Organisation_Res, ID_Catalog)
             )
         """)
         
@@ -204,9 +193,9 @@ def create_schema(conn):
                 Person VARCHAR(55) NOT NULL,
                 Country VARCHAR(48) NOT NULL,
                 Age VARCHAR(3) NOT NULL,
-                ID_Organisation DECIMAL NOT NULL,
+                ID_Organisation_Edu DECIMAL NOT NULL,
                 ID_Catalog DECIMAL NOT NULL,
-                PRIMARY KEY (Person, ID_Organisation, ID_Catalog)
+                PRIMARY KEY (Person, ID_Organisation_Edu, ID_Catalog)
             )
         """)
         
@@ -214,11 +203,11 @@ def create_schema(conn):
             CREATE TABLE Automatic_telescope (
                 Telescope VARCHAR(32) NOT NULL,
                 Type VARCHAR(32) NOT NULL,
-                ID_Organisation VARCHAR(100) NOT NULL,
+                ID_Organisation_Res VARCHAR(100) NOT NULL,
                 Year DECIMAL NOT NULL,
                 Spot VARCHAR(40) NOT NULL,
                 ID_Catalog DECIMAL NOT NULL,
-                PRIMARY KEY (Telescope, ID_Organisation, ID_Catalog)
+                PRIMARY KEY (Telescope, ID_Organisation_Res, ID_Catalog)
             )
         """)
         
@@ -226,11 +215,12 @@ def create_schema(conn):
             CREATE TABLE Object (
                 ObjectName VARCHAR(30) NOT NULL,
                 ID_Catalog DECIMAL NOT NULL,
+                ID_Telescope VARCHAR(32) NOT NULL,
                 Type VARCHAR(20) NOT NULL,
                 Declension DECIMAL NOT NULL,
                 Size DECIMAL NOT NULL,
                 Magnitude DECIMAL NOT NULL,
-                PRIMARY KEY (ObjectName, ID_Catalog)
+                PRIMARY KEY (ObjectName, ID_Catalog, ID_Telescope)
             )
         """)
         
@@ -300,7 +290,6 @@ def generate_scientists(conn, count: int, edu_ids: list, catalog_ids: list):
     conn.commit()
     print(f"    Generated {len(data)} unique scientists")
 
-    
 def generate_amateurs(conn, count: int, edu_ids: list, catalog_ids: list):
     print(f"  Generating amateur astronomers ({count} records) with multiple connections...")
     
@@ -328,7 +317,7 @@ def generate_amateurs(conn, count: int, edu_ids: list, catalog_ids: list):
                     data.append(amateur)
     
     with conn.cursor() as cur:
-        extras.execute_values(cur, "INSERT INTO Amateur_astronomer (Person, Country, Age, ID_Organisation, ID_Catalog) VALUES %s", data, page_size=1000)
+        extras.execute_values(cur, "INSERT INTO Amateur_astronomer (Person, Country, Age, ID_Organisation_Edu, ID_Catalog) VALUES %s", data, page_size=1000)
     conn.commit()
     print(f"    Generated {len(unique_names)} unique amateurs with {len(data)} records")
 
@@ -370,11 +359,11 @@ def generate_telescopes(conn, count: int, research_ids: list, catalog_ids: list)
                     data.append(telescope)
     
     with conn.cursor() as cur:
-        extras.execute_values(cur, "INSERT INTO Automatic_telescope (Telescope, Type, ID_Organisation, Year, Spot, ID_Catalog) VALUES %s", data)
+        extras.execute_values(cur, "INSERT INTO Automatic_telescope (Telescope, Type, ID_Organisation_Res, Year, Spot, ID_Catalog) VALUES %s", data)
     conn.commit()
     print(f"    Generated {len(used_telescopes)} unique telescopes with {len(data)} records")
 
-def generate_objects(conn, count: int, catalog_ids: list):
+def generate_objects(conn, count: int, catalog_ids: list, telescope_ids: list):
     print(f"  Generating space objects ({count:,} records) with multiple connections...")
     data = []
     used_names = set()
@@ -392,19 +381,23 @@ def generate_objects(conn, count: int, catalog_ids: list):
                 break
         
         num_catalog_connections = random.randint(1, 5)
+        num_telescope_connections = random.randint(1, 5)
+        
         selected_catalog = random.sample(catalog_ids, min(num_catalog_connections, len(catalog_ids)))
+        selected_telescope = random.sample(telescope_ids, min(num_telescope_connections, len(telescope_ids)))
         
         for cat_id in selected_catalog:
-            key = (obj_name, cat_id)
-            if key not in used_keys:
-                used_keys.add(key)
-                obj = (obj_name, cat_id, obj_type,
-                      round(random.uniform(-90, 90), 4), round(random.uniform(0.01, 120), 2),
-                      round(random.uniform(-30, 20), 2))
-                data.append(obj)
+            for tel_id in selected_telescope:
+                key = (obj_name, cat_id, tel_id)
+                if key not in used_keys:
+                    used_keys.add(key)
+                    obj = (obj_name, cat_id, tel_id, obj_type,
+                          round(random.uniform(-90, 90), 4), round(random.uniform(0.01, 120), 2),
+                          round(random.uniform(-30, 20), 2))
+                    data.append(obj)
     
     with conn.cursor() as cur:
-        extras.execute_values(cur, "INSERT INTO Object (ObjectName, ID_Catalog, Type, Declension, Size, Magnitude) VALUES %s", data, page_size=5000)
+        extras.execute_values(cur, "INSERT INTO Object (ObjectName, ID_Catalog, ID_Telescope, Type, Declension, Size, Magnitude) VALUES %s", data, page_size=5000)
     conn.commit()
     print(f"    Generated {len(used_names)} unique objects with {len(data)} records")
 
@@ -417,10 +410,10 @@ def main():
         "catalogs": 500,
         "edu_institutions": 500,
         "research_orgs": 200,
-        "scientists": 500,
-        "amateurs": 100,
+        "scientists": 5000,
+        "amateurs": 10000,
         "telescopes": 500,
-        "objects": 2000
+        "objects": 200000
     }
     
     try:
@@ -445,10 +438,12 @@ def main():
         edu_ids = list(range(1, counts["edu_institutions"] + 1))
         research_ids = [f"RO_{i+1:04d}" for i in range(counts["research_orgs"])]
         
-        generate_scientists(conn, counts["scientists"], edu_ids, catalog_ids)
+        generate_scientists(conn, counts["scientists"], edu_ids, research_ids, catalog_ids)
         generate_amateurs(conn, counts["amateurs"], edu_ids, catalog_ids)
         generate_telescopes(conn, counts["telescopes"], research_ids, catalog_ids)
-        generate_objects(conn, counts["objects"], catalog_ids)
+        
+        telescope_ids = [f"{random.choice(['Hubble', 'Webb', 'Keck', 'VLT', 'ALMA', 'Chandra', 'Fermi', 'FAST', 'Gemini', 'Subaru'])}-{random.randint(1, 9999)}" for _ in range(500)]
+        generate_objects(conn, counts["objects"], catalog_ids, telescope_ids)
         
         print("\n" + "=" * 70)
         print("DATA GENERATION COMPLETED SUCCESSFULLY!")
