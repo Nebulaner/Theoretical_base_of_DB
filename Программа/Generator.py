@@ -70,25 +70,6 @@ LAST_NAMES = ["Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Mille
               "Hill", "Ramirez", "Campbell", "Mitchell", "Roberts", "Carter", "Phillips", "Evans",
               "Turner", "Torres", "Parker", "Collins", "Edwards", "Stewart", "Flores", "Morris"]
 
-def generate_unique_names(count: int) -> List[str]:
-    unique_names = []
-    used_names = set()
-    
-    while len(unique_names) < count:
-        first = random.choice(FIRST_NAMES)
-        last = random.choice(LAST_NAMES)
-        
-        if count > 5000:
-            name = f"{first} {last} {len(unique_names) + 1}"
-        else:
-            name = f"{first} {last}"
-        
-        if name not in used_names:
-            used_names.add(name)
-            unique_names.append(name)
-    
-    return unique_names
-
 def create_connection():
     try:
         conn = psycopg2.connect(
@@ -177,50 +158,46 @@ def create_schema(conn):
         
         cur.execute("""
             CREATE TABLE Scientist (
-                Person VARCHAR(55) NOT NULL,
+                Person VARCHAR(55) PRIMARY KEY,
                 Country VARCHAR(48) NOT NULL,
                 Proffesion VARCHAR(20) NOT NULL,
                 Graduate VARCHAR(20) NOT NULL,
-                ID_Organisation_Edu DECIMAL NOT NULL,
-                ID_Organisation_Res VARCHAR(100) NOT NULL,
-                ID_Catalog DECIMAL NOT NULL,
-                PRIMARY KEY (Person, ID_Organisation_Edu, ID_Organisation_Res, ID_Catalog)
+                ID_Organisations_Edu DECIMAL[] NOT NULL,
+                ID_Organisations_Res VARCHAR(100)[] NOT NULL,
+                ID_Catalogs DECIMAL[] NOT NULL
             )
         """)
         
         cur.execute("""
             CREATE TABLE Amateur_astronomer (
-                Person VARCHAR(55) NOT NULL,
+                Person VARCHAR(55) PRIMARY KEY,
                 Country VARCHAR(48) NOT NULL,
                 Age VARCHAR(3) NOT NULL,
-                ID_Organisation_Edu DECIMAL NOT NULL,
-                ID_Catalog DECIMAL NOT NULL,
-                PRIMARY KEY (Person, ID_Organisation_Edu, ID_Catalog)
+                ID_Organisations_Edu DECIMAL[] NOT NULL,
+                ID_Catalogs DECIMAL[] NOT NULL
             )
         """)
         
         cur.execute("""
             CREATE TABLE Automatic_telescope (
-                Telescope VARCHAR(32) NOT NULL,
+                Telescope VARCHAR(32) PRIMARY KEY,
                 Type VARCHAR(32) NOT NULL,
-                ID_Organisation_Res VARCHAR(100) NOT NULL,
                 Year DECIMAL NOT NULL,
                 Spot VARCHAR(40) NOT NULL,
-                ID_Catalog DECIMAL NOT NULL,
-                PRIMARY KEY (Telescope, ID_Organisation_Res, ID_Catalog)
+                ID_Organisations_Res VARCHAR(100)[] NOT NULL,
+                ID_Catalogs DECIMAL[] NOT NULL
             )
         """)
         
         cur.execute("""
             CREATE TABLE Object (
-                ObjectName VARCHAR(30) NOT NULL,
-                ID_Catalog DECIMAL NOT NULL,
-                ID_Telescope VARCHAR(32) NOT NULL,
+                ObjectName VARCHAR(30) PRIMARY KEY,
                 Type VARCHAR(20) NOT NULL,
                 Declension DECIMAL NOT NULL,
                 Size DECIMAL NOT NULL,
                 Magnitude DECIMAL NOT NULL,
-                PRIMARY KEY (ObjectName, ID_Catalog, ID_Telescope)
+                ID_Catalogs DECIMAL[] NOT NULL,
+                ID_Telescopes VARCHAR(32)[] NOT NULL
             )
         """)
         
@@ -270,70 +247,102 @@ def generate_research_organisations(conn, count: int):
         extras.execute_values(cur, "INSERT INTO Research_organisation (ID_Organisation, Type, Country, Budget, Organisation) VALUES %s", data)
     conn.commit()
 
-def generate_scientists(conn, count: int, edu_ids: list, catalog_ids: list):
-    print(f"  Generating scientists ({count} records)...")
-    
-    unique_names = generate_unique_names(count)
+def generate_scientists(conn, target_records: int, edu_ids: list, research_ids: list, catalog_ids: list):
+    print(f"  Generating scientists (target: {target_records} scientists)...")
     
     data = []
-    for i in range(count):
+    used_names = set()
+    person_index = 1
+    
+    for _ in range(target_records):
+        first = random.choice(FIRST_NAMES)
+        last = random.choice(LAST_NAMES)
+        
+        if target_records > 5000:
+            person = f"{first} {last} {person_index}"
+        else:
+            person = f"{first} {last}"
+        
+        if person in used_names:
+            person_index += 1
+            continue
+        
+        used_names.add(person)
         country = random.choice(COUNTRIES)
         profession = random.choice(PROFESSIONS)
         graduate = random.choice(GRADUATES)
         
-        scientist = (unique_names[i], country, profession, graduate,
-                    random.choice(edu_ids), random.choice(catalog_ids))
+        num_edu = random.randint(1, 5)
+        num_res = random.randint(1, 5)
+        num_cat = random.randint(1, 10)
+        
+        selected_edu = random.sample(edu_ids, min(num_edu, len(edu_ids)))
+        selected_res = random.sample(research_ids, min(num_res, len(research_ids)))
+        selected_cat = random.sample(catalog_ids, min(num_cat, len(catalog_ids)))
+        
+        scientist = (person, country, profession, graduate, 
+                    selected_edu, selected_res, selected_cat)
         data.append(scientist)
+        person_index += 1
     
     with conn.cursor() as cur:
-        extras.execute_values(cur, "INSERT INTO Scientist (Person, Country, Proffesion, Graduate, ID_Organisation, ID_Catalog) VALUES %s", data, page_size=1000)
+        extras.execute_values(cur, "INSERT INTO Scientist (Person, Country, Proffesion, Graduate, ID_Organisations_Edu, ID_Organisations_Res, ID_Catalogs) VALUES %s", data, page_size=1000)
     conn.commit()
-    print(f"    Generated {len(data)} unique scientists")
-
-def generate_amateurs(conn, count: int, edu_ids: list, catalog_ids: list):
-    print(f"  Generating amateur astronomers ({count} records) with multiple connections...")
     
-    unique_names = generate_unique_names(count)
+    print(f"    Generated {len(data)} scientists")
+
+def generate_amateurs(conn, target_records: int, edu_ids: list, catalog_ids: list):
+    print(f"  Generating amateur astronomers (target: {target_records} amateurs)...")
     
     data = []
-    used_keys = set()
+    used_names = set()
+    person_index = 1
     
-    for person in unique_names:
+    for _ in range(target_records):
+        first = random.choice(FIRST_NAMES)
+        last = random.choice(LAST_NAMES)
+        
+        if target_records > 5000:
+            person = f"{first} {last} {person_index}"
+        else:
+            person = f"{first} {last}"
+        
+        if person in used_names:
+            person_index += 1
+            continue
+        
+        used_names.add(person)
         country = random.choice(COUNTRIES)
         age = str(random.randint(16, 85))
         
-        num_edu_connections = random.randint(1, 5)
-        num_catalog_connections = random.randint(1, 10)
+        num_edu = random.randint(1, 5)
+        num_cat = random.randint(1, 10)
         
-        selected_edu = random.sample(edu_ids, min(num_edu_connections, len(edu_ids)))
-        selected_catalog = random.sample(catalog_ids, min(num_catalog_connections, len(catalog_ids)))
+        selected_edu = random.sample(edu_ids, min(num_edu, len(edu_ids)))
+        selected_cat = random.sample(catalog_ids, min(num_cat, len(catalog_ids)))
         
-        for edu_id in selected_edu:
-            for cat_id in selected_catalog:
-                key = (person, edu_id, cat_id)
-                if key not in used_keys:
-                    used_keys.add(key)
-                    amateur = (person, country, age, edu_id, cat_id)
-                    data.append(amateur)
+        amateur = (person, country, age, selected_edu, selected_cat)
+        data.append(amateur)
+        person_index += 1
     
     with conn.cursor() as cur:
-        extras.execute_values(cur, "INSERT INTO Amateur_astronomer (Person, Country, Age, ID_Organisation_Edu, ID_Catalog) VALUES %s", data, page_size=1000)
+        extras.execute_values(cur, "INSERT INTO Amateur_astronomer (Person, Country, Age, ID_Organisations_Edu, ID_Catalogs) VALUES %s", data, page_size=1000)
     conn.commit()
-    print(f"    Generated {len(unique_names)} unique amateurs with {len(data)} records")
+    
+    print(f"    Generated {len(data)} amateurs")
 
-def generate_telescopes(conn, count: int, research_ids: list, catalog_ids: list):
-    print(f"  Generating telescopes ({count} records) with multiple connections...")
+def generate_telescopes(conn, target_records: int, research_ids: list, catalog_ids: list):
+    print(f"  Generating telescopes (target: {target_records} telescopes)...")
+    
     data = []
     telescope_names = ["Hubble", "Webb", "Keck", "VLT", "ALMA", "Chandra", "Fermi", "FAST", "Gemini", "Subaru"]
+    used_names = set()
     
-    used_telescopes = set()
-    used_keys = set()
-    
-    for _ in range(count):
+    for _ in range(target_records):
         while True:
             tel_name = f"{random.choice(telescope_names)}-{random.randint(1, 9999)}"
-            if tel_name not in used_telescopes:
-                used_telescopes.add(tel_name)
+            if tel_name not in used_names:
+                used_names.add(tel_name)
                 break
         
         tel_type = random.choice(TELESCOPE_TYPES)
@@ -344,32 +353,28 @@ def generate_telescopes(conn, count: int, research_ids: list, catalog_ids: list)
             spot = spot[:40]
         year = random.randint(1950, 2025)
         
-        num_res_connections = random.randint(1, 5)
-        num_catalog_connections = random.randint(1, 10)
+        num_res = random.randint(1, 5)
+        num_cat = random.randint(1, 10)
         
-        selected_res = random.sample(research_ids, min(num_res_connections, len(research_ids)))
-        selected_catalog = random.sample(catalog_ids, min(num_catalog_connections, len(catalog_ids)))
+        selected_res = random.sample(research_ids, min(num_res, len(research_ids)))
+        selected_cat = random.sample(catalog_ids, min(num_cat, len(catalog_ids)))
         
-        for res_id in selected_res:
-            for cat_id in selected_catalog:
-                key = (tel_name, res_id, cat_id)
-                if key not in used_keys:
-                    used_keys.add(key)
-                    telescope = (tel_name, tel_type, res_id, year, spot, cat_id)
-                    data.append(telescope)
+        telescope = (tel_name, tel_type, year, spot, selected_res, selected_cat)
+        data.append(telescope)
     
     with conn.cursor() as cur:
-        extras.execute_values(cur, "INSERT INTO Automatic_telescope (Telescope, Type, ID_Organisation_Res, Year, Spot, ID_Catalog) VALUES %s", data)
+        extras.execute_values(cur, "INSERT INTO Automatic_telescope (Telescope, Type, Year, Spot, ID_Organisations_Res, ID_Catalogs) VALUES %s", data)
     conn.commit()
-    print(f"    Generated {len(used_telescopes)} unique telescopes with {len(data)} records")
+    
+    print(f"    Generated {len(data)} telescopes")
 
-def generate_objects(conn, count: int, catalog_ids: list, telescope_ids: list):
-    print(f"  Generating space objects ({count:,} records) with multiple connections...")
+def generate_objects(conn, target_records: int, catalog_ids: list, telescope_ids: list):
+    print(f"  Generating space objects (target: {target_records:,} objects)...")
+    
     data = []
     used_names = set()
-    used_keys = set()
     
-    for _ in range(count):
+    for _ in range(target_records):
         obj_type = random.choice(OBJECT_TYPES)
         
         while True:
@@ -380,26 +385,24 @@ def generate_objects(conn, count: int, catalog_ids: list, telescope_ids: list):
                 used_names.add(obj_name)
                 break
         
-        num_catalog_connections = random.randint(1, 5)
-        num_telescope_connections = random.randint(1, 5)
+        num_cat = random.randint(1, 5)
+        num_tel = random.randint(1, 5)
         
-        selected_catalog = random.sample(catalog_ids, min(num_catalog_connections, len(catalog_ids)))
-        selected_telescope = random.sample(telescope_ids, min(num_telescope_connections, len(telescope_ids)))
+        selected_cat = random.sample(catalog_ids, min(num_cat, len(catalog_ids)))
+        selected_tel = random.sample(telescope_ids, min(num_tel, len(telescope_ids)))
         
-        for cat_id in selected_catalog:
-            for tel_id in selected_telescope:
-                key = (obj_name, cat_id, tel_id)
-                if key not in used_keys:
-                    used_keys.add(key)
-                    obj = (obj_name, cat_id, tel_id, obj_type,
-                          round(random.uniform(-90, 90), 4), round(random.uniform(0.01, 120), 2),
-                          round(random.uniform(-30, 20), 2))
-                    data.append(obj)
+        obj = (obj_name, obj_type,
+              round(random.uniform(-90, 90), 4), 
+              round(random.uniform(0.01, 120), 2),
+              round(random.uniform(-30, 20), 2),
+              selected_cat, selected_tel)
+        data.append(obj)
     
     with conn.cursor() as cur:
-        extras.execute_values(cur, "INSERT INTO Object (ObjectName, ID_Catalog, ID_Telescope, Type, Declension, Size, Magnitude) VALUES %s", data, page_size=5000)
+        extras.execute_values(cur, "INSERT INTO Object (ObjectName, Type, Declension, Size, Magnitude, ID_Catalogs, ID_Telescopes) VALUES %s", data, page_size=5000)
     conn.commit()
-    print(f"    Generated {len(used_names)} unique objects with {len(data)} records")
+    
+    print(f"    Generated {len(data)} objects")
 
 def main():
     print("=" * 70)
@@ -413,7 +416,7 @@ def main():
         "scientists": 5000,
         "amateurs": 10000,
         "telescopes": 500,
-        "objects": 200000
+        "objects": 10000
     }
     
     try:
@@ -442,7 +445,10 @@ def main():
         generate_amateurs(conn, counts["amateurs"], edu_ids, catalog_ids)
         generate_telescopes(conn, counts["telescopes"], research_ids, catalog_ids)
         
-        telescope_ids = [f"{random.choice(['Hubble', 'Webb', 'Keck', 'VLT', 'ALMA', 'Chandra', 'Fermi', 'FAST', 'Gemini', 'Subaru'])}-{random.randint(1, 9999)}" for _ in range(500)]
+        with conn.cursor() as cur:
+            cur.execute("SELECT Telescope FROM Automatic_telescope")
+            telescope_ids = [row[0] for row in cur.fetchall()]
+        
         generate_objects(conn, counts["objects"], catalog_ids, telescope_ids)
         
         print("\n" + "=" * 70)
